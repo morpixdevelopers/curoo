@@ -1,27 +1,26 @@
-import React from 'react';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import About from './components/About';
-import Services from './components/Services';
-import Doctors from './components/Doctors';
-import AppointmentForm from './components/AppointmentForm';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import MainWebsite from "./components/MainWebsite";
+import Admin from "./components/Admin";
 
 function App() {
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
-      <main>
-        <Hero />
-        <About />
-        <Services />
-        <Doctors />
-        <AppointmentForm />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+    <Router>
+      <Routes>
+        {/* Main website route */}
+        <Route path="/" element={<MainWebsite />} />
+
+        {/* Admin route */}
+        <Route path="/admin" element={<Admin />} />
+
+        {/* Redirect any unknown routes to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

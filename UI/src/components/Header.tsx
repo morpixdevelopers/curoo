@@ -80,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({ onBookAppointment }) => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">Curoo</h1>
                 <p className="text-sm text-gray-600 font-medium">
-                  Medical Center
+                  Health Care
                 </p>
               </div>
             </div>

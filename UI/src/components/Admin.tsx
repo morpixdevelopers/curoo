@@ -959,7 +959,7 @@ const Admin: React.FC = () => {
                   Curoo Admin
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Medical Center Management
+                  Health Care Management
                 </p>
               </div>
             </div>

@@ -49,7 +49,7 @@ const Footer: React.FC<FooterProps> = ({ onBookAppointment }) => {
                   Curoo
                 </h3>
                 <p className="text-gray-300 text-sm font-medium">
-                  Medical Center
+                  Health Care
                 </p>
               </div>
             </div>
@@ -202,7 +202,7 @@ const Footer: React.FC<FooterProps> = ({ onBookAppointment }) => {
                   size={18}
                 />
                 <div className="text-gray-200">
-                  <p>123 Medical Center Drive</p>
+                  <p>123 Health Care Drive</p>
                   <p>Health City, HC 12345</p>
                 </div>
               </div>
@@ -245,7 +245,7 @@ const Footer: React.FC<FooterProps> = ({ onBookAppointment }) => {
         <div className="border-t border-gray-700/50 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center relative z-10">
           <div className="text-center md:text-left">
             <p className="text-gray-300 text-sm">
-              © 2025 Curoo Medical Center. All rights reserved.
+              © 2025 Curoo Health Care. All rights reserved.
             </p>
             <p className="text-gray-400 text-xs mt-1">
               Developed by <span className="text-purple-300 font-medium">@Morpix._</span> | Contact: <span className="text-purple-300">morpix.developers@gmail.com</span>

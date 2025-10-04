@@ -46,13 +46,13 @@ const About: React.FC = () => {
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Star className="text-medical-500 animate-spin-slow" size={24} />
             <span className="text-medical-600 font-semibold">
-              About Our Medical Center
+              About Our Health Care
             </span>
             <Star className="text-accent-500 animate-spin-slow" size={24} />
           </div>
           <h2 className="text-4xl lg:text-6xl font-bold mb-4">
             <span className="bg-gradient-to-r from-medical-600 via-accent-500 to-medical-500 bg-clip-text text-transparent">
-              Curoo Medical Center
+              Curoo Health Care
             </span>
           </h2>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto animate-fadeInUp animation-delay-300">
@@ -69,7 +69,7 @@ const About: React.FC = () => {
               Our Story
             </h3>
             <p className="text-gray-700 text-lg leading-relaxed">
-              Founded in 1998, Curoo Medical Center began as a small community
+              Founded in 1998, Curoo Health Care began as a small community
               clinic with a simple mission: to provide world-class healthcare
               that's accessible, affordable, and delivered with genuine
               compassion.

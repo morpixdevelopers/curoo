@@ -100,7 +100,7 @@ const AppointmentForm: React.FC = () => {
               Appointment Request Submitted!
             </h3>
             <p className="text-xl text-gray-700 mb-6">
-              Thank you for choosing Curoo Medical Center. ✨ We'll contact you
+              Thank you for choosing Curoo Health Care. ✨ We'll contact you
               within 24 hours to confirm your appointment.
             </p>
             <p className="text-gray-600">

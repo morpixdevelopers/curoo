@@ -164,7 +164,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     Appointment Booked Successfully! 🎉
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Thank you for choosing Curoo Medical Center. We'll contact
+                    Thank you for choosing Curoo Health Care. We'll contact
                     you within 24 hours to confirm your appointment details.
                   </p>
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">

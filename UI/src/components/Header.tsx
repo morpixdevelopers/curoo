@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Menu, X, ChevronDown, ArrowRight } from "lucide-react";
 import logoImage from "../img/logo.png";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   onBookAppointment?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onBookAppointment }) => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isServicesHovered, setIsServicesHovered] = useState(false);
@@ -19,6 +21,10 @@ const Header: React.FC<HeaderProps> = ({ onBookAppointment }) => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const callAction = () => {
+    navigate("/admin");
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -80,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({ onBookAppointment }) => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">Curoo</h1>
                 <p className="text-sm text-gray-600 font-medium">
-                  Health Care
+                  Medical Center
                 </p>
               </div>
             </div>
@@ -194,6 +200,13 @@ const Header: React.FC<HeaderProps> = ({ onBookAppointment }) => {
                 className="relative text-gray-700 hover:text-medical-600 transition-all duration-300 font-medium group"
               >
                 Contact
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-medical-600 to-accent-500 group-hover:w-full transition-all duration-300"></span>
+              </button>
+              <button
+                onClick={callAction}
+                className="relative text-gray-700 hover:text-medical-600 transition-all duration-300 font-medium group"
+              >
+                Admin
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-medical-600 to-accent-500 group-hover:w-full transition-all duration-300"></span>
               </button>
             </nav>

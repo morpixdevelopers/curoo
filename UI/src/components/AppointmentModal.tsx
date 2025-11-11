@@ -11,6 +11,8 @@ import {
   CheckCircle,
   X,
 } from "lucide-react";
+import { api } from "../services/api";
+
 import { AppointmentForm as AppointmentFormType } from "../types";
 
 interface AppointmentModalProps {
@@ -22,6 +24,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  console.log('AppointmentModal rendered with isOpen:', )
   const [formData, setFormData] = useState<AppointmentFormType>({
     firstName: "",
     lastName: "",
@@ -71,6 +74,18 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 2000));
+    const appointmentData = {
+      first_name : formData.firstName,
+      last_name : formData.lastName,
+      email : formData.email,
+      phone : formData.phone,
+      department : formData.department,
+      preferred_date : formData.preferredDate,
+      preferred_time : formData.preferredTime,
+      message : formData.message,
+    }
+    const createdService = await api.appointments.create(appointmentData);
+    console.log("Appointment created:", createdService);
 
     setIsSubmitting(false);
     setIsSubmitted(true);
@@ -164,7 +179,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     Appointment Booked Successfully! 🎉
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Thank you for choosing Curoo Health Care. We'll contact
+                    Thank you for choosing Curoo Medical Center. We'll contact
                     you within 24 hours to confirm your appointment details.
                   </p>
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
@@ -332,6 +347,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     <button
                       type="submit"
                       disabled={isSubmitting}
+
                       className="w-full bg-gradient-to-r from-medical-600 via-accent-500 to-medical-500 text-white py-4 rounded-xl hover:shadow-2xl hover:shadow-medical-500/25 transition-all duration-500 font-medium transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group overflow-hidden relative"
                     >
                       <span className="absolute inset-0 bg-gradient-to-r from-medical-500 via-accent-500 to-medical-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>

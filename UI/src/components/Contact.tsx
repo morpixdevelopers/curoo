@@ -62,7 +62,7 @@ const Contact: React.FC = () => {
                     Address
                   </h4>
                   <p className="text-gray-700">
-                    123 Health Care Drive
+                    123 Medical Center Drive
                     <br />
                     Health City, HC 12345
                     <br />

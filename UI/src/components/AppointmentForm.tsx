@@ -10,9 +10,19 @@ import {
   Heart,
   CheckCircle,
 } from "lucide-react";
+import {
+  Doctor,
+  Service,
+  Appointment,
+  DoctorCreate,
+  ServiceCreate,
+  AppointmentCreate,
+} from "../types/api";
 import { AppointmentForm as AppointmentFormType } from "../types";
+import { api } from "../services/api";
 
 const AppointmentForm: React.FC = () => {
+
   const [formData, setFormData] = useState<AppointmentFormType>({
     firstName: "",
     lastName: "",
@@ -23,10 +33,10 @@ const AppointmentForm: React.FC = () => {
     preferredTime: "",
     message: "",
   });
-
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
+  
   const departments = [
     "Cardiology",
     "Pediatrics",
@@ -36,7 +46,7 @@ const AppointmentForm: React.FC = () => {
     "Radiology",
     "General Medicine",
   ];
-
+  
   const timeSlots = [
     "09:00 AM",
     "10:00 AM",
@@ -46,7 +56,7 @@ const AppointmentForm: React.FC = () => {
     "04:00 PM",
     "05:00 PM",
   ];
-
+  
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -58,16 +68,32 @@ const AppointmentForm: React.FC = () => {
       [name]: value,
     }));
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    
+    try{
+      e.preventDefault();
     setIsSubmitting(true);
-
+    
     // Simulate form submission
     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setIsSubmitting(false);
+  
+      const appointmentData = {
+        first_name : formData.firstName,
+        last_name : formData.lastName,
+        email : formData.email,
+        phone : formData.phone,
+        department : formData.department,
+        preferred_date : formData.preferredDate,
+        preferred_time : formData.preferredTime,
+        message : formData.message,
+      }
+      const createdService = await api.appointments.create(appointmentData);
+      console.log("Appointment created:", createdService);
+      setIsSubmitting(false);
     setIsSubmitted(true);
+    
+  
 
     // Reset form after 3 seconds
     setTimeout(() => {
@@ -82,7 +108,10 @@ const AppointmentForm: React.FC = () => {
         preferredTime: "",
         message: "",
       });
-    }, 3000);
+    }, 3000);}
+    catch (err) {
+      console.error("Error creating appointment:", err);
+    }
   };
 
   if (isSubmitted) {
@@ -100,7 +129,7 @@ const AppointmentForm: React.FC = () => {
               Appointment Request Submitted!
             </h3>
             <p className="text-xl text-gray-700 mb-6">
-              Thank you for choosing Curoo Health Care. ✨ We'll contact you
+              Thank you for choosing Curoo Medical Center. ✨ We'll contact you
               within 24 hours to confirm your appointment.
             </p>
             <p className="text-gray-600">

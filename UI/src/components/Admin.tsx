@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -28,46 +28,34 @@ import {
   Award,
   Stethoscope,
 } from "lucide-react";
-import {
-  doctors as initialDoctors,
-  services as initialServices,
-} from "../data/hospitalData";
 import { AppointmentForm } from "../types";
-
-interface Appointment extends AppointmentForm {
-  id: string;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
-  createdAt: string;
-}
-
-interface Doctor {
-  id: string;
-  name: string;
-  specialty: string;
-  qualification: string;
-  experience: string;
-  image: string;
-}
-
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-  icon?: string;
-}
+import { api } from "../services/api";
+import {
+  Doctor,
+  Service,
+  Appointment,
+  DoctorCreate,
+  ServiceCreate,
+  AppointmentCreate,
+} from "../types/api";
 
 const Admin: React.FC = () => {
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // State for doctors
-  const [doctors, setDoctors] = useState<Doctor[]>(initialDoctors);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [editingDoctor, setEditingDoctor] = useState<string | null>(null);
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
-  const [newDoctor, setNewDoctor] = useState<Omit<Doctor, "id">>({
+  const [newDoctor, setNewDoctor] = useState<DoctorCreate>({
     name: "",
     specialty: "",
     qualification: "",
@@ -76,56 +64,42 @@ const Admin: React.FC = () => {
   });
 
   // State for services
-  const [services, setServices] = useState<Service[]>(initialServices);
+  const [services, setServices] = useState<Service[]>([]);
   const [editingService, setEditingService] = useState<string | null>(null);
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
-  const [newService, setNewService] = useState<Omit<Service, "id">>({
+  const [newService, setNewService] = useState<ServiceCreate>({
     name: "",
     description: "",
+    department: "",
   });
 
   // State for appointments
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: "1",
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@email.com",
-      phone: "+1 (555) 123-4567",
-      department: "Cardiology",
-      preferredDate: "2024-10-10",
-      preferredTime: "10:00",
-      message: "Regular checkup",
-      status: "pending",
-      createdAt: "2024-10-04",
-    },
-    {
-      id: "2",
-      firstName: "Jane",
-      lastName: "Smith",
-      email: "jane.smith@email.com",
-      phone: "+1 (555) 987-6543",
-      department: "Pediatrics",
-      preferredDate: "2024-10-12",
-      preferredTime: "14:30",
-      message: "Child vaccination",
-      status: "confirmed",
-      createdAt: "2024-10-03",
-    },
-    {
-      id: "3",
-      firstName: "Mike",
-      lastName: "Johnson",
-      email: "mike.j@email.com",
-      phone: "+1 (555) 456-7890",
-      department: "Orthopedics",
-      preferredDate: "2024-10-15",
-      preferredTime: "09:00",
-      message: "Knee pain consultation",
-      status: "cancelled",
-      createdAt: "2024-10-02",
-    },
-  ]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [doctorsData, servicesData, appointmentsData] = await Promise.all([
+        api.doctors.getAll(),
+        api.services.getAll(),
+        api.appointments.getAll(),
+      ]);
+      setDoctors(doctorsData);
+      setServices(servicesData);
+      setAppointments(appointmentsData);
+    } catch (err) {
+      setError("Failed to load data");
+      console.error("Error loading data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Utility functions
   const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -171,84 +145,140 @@ const Admin: React.FC = () => {
   };
 
   // Doctor CRUD operations
-  const handleAddDoctor = () => {
+  const handleAddDoctor = async () => {
     if (newDoctor.name && newDoctor.specialty) {
-      const doctor: Doctor = {
-        ...newDoctor,
-        id: generateId(),
-      };
-      setDoctors([...doctors, doctor]);
-      setNewDoctor({
-        name: "",
-        specialty: "",
-        qualification: "",
-        experience: "",
-        image: "",
-      });
-      setShowAddDoctorModal(false);
+      try {
+        const createdDoctor = await api.doctors.create(newDoctor);
+        setDoctors([...doctors, createdDoctor]);
+        setNewDoctor({
+          name: "",
+          specialty: "",
+          qualification: "",
+          experience: "",
+          image: "",
+        });
+        setShowAddDoctorModal(false);
+      } catch (err) {
+        console.error("Error creating doctor:", err);
+        setError("Failed to create doctor");
+      }
     }
   };
 
-  const handleEditDoctor = (id: string, updatedDoctor: Partial<Doctor>) => {
-    setDoctors(
-      doctors.map((doctor) =>
-        doctor.id === id ? { ...doctor, ...updatedDoctor } : doctor
-      )
-    );
+  const handleEditDoctor = async (
+    id: string,
+    updatedDoctor: Partial<Doctor>
+  ) => {
+    try {
+      await api.doctors.update(id, updatedDoctor);
+      setDoctors(
+        doctors.map((doctor) =>
+          doctor._id === id ? { ...doctor, ...updatedDoctor } : doctor
+        )
+      );
+    } catch (err) {
+      console.error("Error updating doctor:", err);
+      setError("Failed to update doctor");
+    }
   };
 
-  const handleDeleteDoctor = (id: string) => {
+  const handleDeleteDoctor = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this doctor?")) {
-      setDoctors(doctors.filter((doctor) => doctor.id !== id));
+      try {
+        await api.doctors.delete(id);
+        setDoctors(doctors.filter((doctor) => doctor._id !== id));
+      } catch (err) {
+        console.error("Error deleting doctor:", err);
+        setError("Failed to delete doctor");
+      }
     }
   };
 
   // Service CRUD operations
-  const handleAddService = () => {
+  const handleAddService = async () => {
     if (newService.name && newService.description) {
-      const service: Service = {
-        ...newService,
-        id: generateId(),
-      };
-      setServices([...services, service]);
-      setNewService({
-        name: "",
-        description: "",
-      });
-      setShowAddServiceModal(false);
+      try {
+        const createdService = await api.services.create(newService);
+        setServices([...services, createdService]);
+        setNewService({
+          name: "",
+          description: "",
+          department: "",
+        });
+        setShowAddServiceModal(false);
+      } catch (err) {
+        console.error("Error creating service:", err);
+        setError("Failed to create service");
+      }
     }
   };
 
-  const handleEditService = (id: string, updatedService: Partial<Service>) => {
-    setServices(
-      services.map((service) =>
-        service.id === id ? { ...service, ...updatedService } : service
-      )
-    );
+  const handleEditService = async (
+    id: string,
+    updatedService: Partial<Service>
+  ) => {
+    try {
+      await api.services.update(id, updatedService);
+      setServices(
+        services.map((service) =>
+          service._id === id ? { ...service, ...updatedService } : service
+        )
+      );
+    } catch (err) {
+      console.error("Error updating service:", err);
+      setError("Failed to update service");
+    }
   };
 
-  const handleDeleteService = (id: string) => {
+  const handleDeleteService = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this service?")) {
-      setServices(services.filter((service) => service.id !== id));
+      try {
+        await api.services.delete(id);
+        setServices(services.filter((service) => service._id !== id));
+      } catch (err) {
+        console.error("Error deleting service:", err);
+        setError("Failed to delete service");
+      }
     }
   };
 
   // Appointment operations
-  const handleUpdateAppointmentStatus = (id: string, status: string) => {
-    setAppointments(
-      appointments.map((appointment) =>
-        appointment.id === id
-          ? { ...appointment, status: status as any }
-          : appointment
-      )
-    );
+  const handleUpdateAppointmentStatus = async (id: string, status: string) => {
+    try {
+      await api.appointments.update(id, {
+        status: status as "pending" | "confirmed" | "cancelled" | "completed",
+      });
+      setAppointments(
+        appointments.map((appointment) =>
+          appointment._id === id
+            ? {
+                ...appointment,
+                status: status as
+                  | "pending"
+                  | "confirmed"
+                  | "cancelled"
+                  | "completed",
+              }
+            : appointment
+        )
+      );
+    } catch (err) {
+      console.error("Error updating appointment:", err);
+      setError("Failed to update appointment status");
+    }
   };
 
-  const handleDeleteAppointment = (id: string) => {
+  const handleDeleteAppointment = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this appointment?")) {
-      setAppointments(
-        appointments.filter((appointment) => appointment.id !== id)
-      );
+      try {
+        await api.appointments.delete(id);
+        setAppointments(
+          appointments.filter((appointment) => appointment._id !== id)
+        );
+      } catch (err) {
+        console.error("Error deleting appointment:", err);
+        setError("Failed to delete appointment");
+      }
     }
   };
 
@@ -276,8 +306,8 @@ const Admin: React.FC = () => {
 
   const filteredAppointments = appointments.filter((appointment) => {
     const matchesSearch =
-      appointment.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.department.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -372,11 +402,11 @@ const Admin: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {appointments.slice(0, 5).map((appointment) => (
-                <tr key={appointment.id} className="hover:bg-gray-50">
+                <tr key={appointment._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {appointment.firstName} {appointment.lastName}
+                        {appointment.first_name} {appointment.last_name}
                       </div>
                       <div className="text-sm text-gray-500">
                         {appointment.email}
@@ -387,7 +417,7 @@ const Admin: React.FC = () => {
                     {appointment.department}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {appointment.preferredDate} at {appointment.preferredTime}
+                    {appointment.preferred_date} at {appointment.preferred_time}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -483,7 +513,7 @@ const Admin: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredAppointments.map((appointment) => (
-                <tr key={appointment.id} className="hover:bg-gray-50">
+                <tr key={appointment._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-gradient-to-br from-medical-100 to-accent-100 rounded-full flex items-center justify-center">
@@ -491,10 +521,10 @@ const Admin: React.FC = () => {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {appointment.firstName} {appointment.lastName}
+                          {appointment.first_name} {appointment.last_name}
                         </div>
                         <div className="text-sm text-gray-500">
-                          ID: {appointment.id}
+                          ID: {appointment._id}
                         </div>
                       </div>
                     </div>
@@ -514,11 +544,11 @@ const Admin: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {appointment.preferredDate}
+                      {appointment.preferred_date}
                     </div>
                     <div className="text-sm text-gray-500 flex items-center space-x-1">
                       <Clock size={14} className="text-gray-400" />
-                      <span>{appointment.preferredTime}</span>
+                      <span>{appointment.preferred_time}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -526,7 +556,7 @@ const Admin: React.FC = () => {
                       value={appointment.status}
                       onChange={(e) =>
                         handleUpdateAppointmentStatus(
-                          appointment.id,
+                          appointment._id!,
                           e.target.value
                         )
                       }
@@ -543,7 +573,9 @@ const Admin: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => handleDeleteAppointment(appointment.id)}
+                        onClick={() =>
+                          handleDeleteAppointment(appointment._id!)
+                        }
                         className="text-red-600 hover:text-red-700 p-1 hover:bg-red-50 rounded"
                       >
                         <Trash2 size={16} />
@@ -577,7 +609,7 @@ const Admin: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {doctors.map((doctor) => (
           <div
-            key={doctor.id}
+            key={doctor._id}
             className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300"
           >
             <div className="relative">
@@ -594,13 +626,13 @@ const Admin: React.FC = () => {
               </div>
             </div>
             <div className="p-6">
-              {editingDoctor === doctor.id ? (
+              {editingDoctor === doctor._id ? (
                 <div className="space-y-3">
                   <input
                     type="text"
                     value={doctor.name}
                     onChange={(e) =>
-                      handleEditDoctor(doctor.id, { name: e.target.value })
+                      handleEditDoctor(doctor._id!, { name: e.target.value })
                     }
                     className="w-full p-2 border border-gray-300 rounded-lg text-xl font-bold"
                     placeholder="Doctor Name"
@@ -609,7 +641,9 @@ const Admin: React.FC = () => {
                     type="text"
                     value={doctor.specialty}
                     onChange={(e) =>
-                      handleEditDoctor(doctor.id, { specialty: e.target.value })
+                      handleEditDoctor(doctor._id!, {
+                        specialty: e.target.value,
+                      })
                     }
                     className="w-full p-2 border border-gray-300 rounded-lg"
                     placeholder="Specialty"
@@ -618,7 +652,7 @@ const Admin: React.FC = () => {
                     type="text"
                     value={doctor.qualification}
                     onChange={(e) =>
-                      handleEditDoctor(doctor.id, {
+                      handleEditDoctor(doctor._id!, {
                         qualification: e.target.value,
                       })
                     }
@@ -629,7 +663,7 @@ const Admin: React.FC = () => {
                     type="text"
                     value={doctor.experience}
                     onChange={(e) =>
-                      handleEditDoctor(doctor.id, {
+                      handleEditDoctor(doctor._id!, {
                         experience: e.target.value,
                       })
                     }
@@ -640,7 +674,7 @@ const Admin: React.FC = () => {
                     type="url"
                     value={doctor.image}
                     onChange={(e) =>
-                      handleEditDoctor(doctor.id, { image: e.target.value })
+                      handleEditDoctor(doctor._id!, { image: e.target.value })
                     }
                     className="w-full p-2 border border-gray-300 rounded-lg"
                     placeholder="Image URL"
@@ -676,14 +710,14 @@ const Admin: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => setEditingDoctor(doctor.id)}
+                      onClick={() => setEditingDoctor(doctor._id || null)}
                       className="flex-1 bg-gradient-to-r from-medical-50 to-accent-50 text-medical-600 py-2 px-4 rounded-lg hover:from-medical-100 hover:to-accent-100 transition-all duration-300 flex items-center justify-center space-x-2"
                     >
                       <Edit size={16} />
                       <span>Edit</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteDoctor(doctor.id)}
+                      onClick={() => handleDeleteDoctor(doctor._id!)}
                       className="bg-red-50 text-red-600 py-2 px-4 rounded-lg hover:bg-red-100 transition-all duration-300"
                     >
                       <Trash2 size={16} />
@@ -718,7 +752,7 @@ const Admin: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {services.map((service) => (
           <div
-            key={service.id}
+            key={service._id}
             className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300"
           >
             <div className="flex items-start justify-between mb-4">
@@ -727,26 +761,26 @@ const Admin: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setEditingService(service.id)}
+                  onClick={() => setEditingService(service._id || null)}
                   className="text-medical-600 hover:text-medical-700 p-1 hover:bg-medical-50 rounded"
                 >
                   <Edit size={16} />
                 </button>
                 <button
-                  onClick={() => handleDeleteService(service.id)}
+                  onClick={() => handleDeleteService(service._id!)}
                   className="text-red-600 hover:text-red-700 p-1 hover:bg-red-50 rounded"
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
             </div>
-            {editingService === service.id ? (
+            {editingService === service._id ? (
               <div className="space-y-3">
                 <input
                   type="text"
                   value={service.name}
                   onChange={(e) =>
-                    handleEditService(service.id, { name: e.target.value })
+                    handleEditService(service._id!, { name: e.target.value })
                   }
                   className="w-full p-2 border border-gray-300 rounded-lg text-lg font-bold"
                   placeholder="Service Name"
@@ -754,7 +788,7 @@ const Admin: React.FC = () => {
                 <textarea
                   value={service.description}
                   onChange={(e) =>
-                    handleEditService(service.id, {
+                    handleEditService(service._id!, {
                       description: e.target.value,
                     })
                   }
@@ -959,7 +993,7 @@ const Admin: React.FC = () => {
                   Curoo Admin
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Health Care Management
+                  Medical Center Management
                 </p>
               </div>
             </div>

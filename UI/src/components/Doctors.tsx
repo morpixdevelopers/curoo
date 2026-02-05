@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Award, Clock, Star, Sparkles } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {
+  Award,
+  Clock,
+  Star,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { api } from "../services/api";
 import { Doctor } from "../types/api";
 
@@ -9,184 +16,151 @@ interface DoctorsProps {
 
 const Doctors: React.FC<DoctorsProps> = ({ onBookAppointment }) => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState<"left" | "right">("right");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDoctors = async () => {
       try {
-        const doctorsData = await api.doctors.getAll();
-        setDoctors(doctorsData);
-      } catch (err) {
-        console.error("Error loading doctors:", err);
+        const data = await api.doctors.getAll();
+        setDoctors(data);
+      } catch {
         setError("Failed to load doctors");
       } finally {
         setLoading(false);
       }
     };
-
     loadDoctors();
   }, []);
 
-  if (loading) {
+  if (loading || error || doctors.length < 3) {
     return (
-      <section className="relative py-20 bg-gradient-to-br from-white via-medical-50/30 to-accent-50/30">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-medical-600">Loading doctors...</div>
-        </div>
+      <section className="py-20 text-center text-lg text-medical-600">
+        {loading ? "Loading doctors..." : error}
       </section>
     );
   }
 
-  if (error) {
-    return (
-      <section className="relative py-20 bg-gradient-to-br from-white via-medical-50/30 to-accent-50/30">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-red-600">{error}</div>
-        </div>
-      </section>
-    );
-  }
+  const total = doctors.length;
+  const prevIndex = (current - 1 + total) % total;
+  const nextIndex = (current + 1) % total;
+
+  const moveNext = () => {
+    setDirection("right");
+    setCurrent((prev) => (prev + 1) % total);
+  };
+
+  const movePrev = () => {
+    setDirection("left");
+    setCurrent((prev) => (prev - 1 + total) % total);
+  };
 
   return (
     <section
       id="doctors"
-      className="relative py-20 bg-gradient-to-br from-white via-medical-50/30 to-accent-50/30 overflow-hidden"
+      className="py-32 bg-gradient-to-br from-white via-medical-50/30 to-accent-50/30 overflow-hidden"
     >
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-40 left-10 w-72 h-72 bg-medical-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-40 right-10 w-72 h-72 bg-accent-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
-      </div>
+      <div className="max-w-7xl mx-auto px-4">
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16 animate-fadeInUp">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Star className="text-medical-500 animate-spin-slow" size={24} />
+        {/* HEADER */}
+        <div className="text-center mb-20">
+          <div className="flex justify-center gap-2 mb-4">
+            <Star className="text-medical-500 animate-spin-slow" />
             <span className="text-medical-600 font-semibold">
               Our Medical Team
             </span>
-            <Star className="text-accent-500 animate-spin-slow" size={24} />
+            <Star className="text-accent-500 animate-spin-slow" />
           </div>
-          <h2 className="text-4xl lg:text-6xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-medical-600 via-accent-500 to-medical-500 bg-clip-text text-transparent">
-              Meet Our Expert Doctors
-            </span>
+
+          <h2 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-medical-600 via-accent-500 to-medical-500 bg-clip-text text-transparent">
+            Meet Our Expert Doctors
           </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto animate-fadeInUp animation-delay-300">
-            Our team of board-certified physicians brings decades of combined
-            experience and expertise to provide you with the highest quality
-            medical care. ✨
-          </p>
         </div>
 
-        {/* Doctors Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 animate-fadeInUp animation-delay-600">
-          {doctors.slice(0, 4).map((doctor) => (
-            <div
-              key={doctor._id}
-              className="group bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-medical-500/20 transition-all duration-500 overflow-hidden border border-medical-100/50 transform hover:scale-105 hover:-translate-y-2"
-            >
-              <div className="relative">
-                <img
-                  src={doctor.image}
-                  alt={doctor.name}
-                  className="w-full h-64 object-cover transform group-hover:scale-110 transition-all duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-medical-900/20 to-transparent"></div>
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-medical-600 to-accent-500 text-white px-3 py-2 rounded-full text-sm font-medium shadow-lg animate-pulse">
-                  {doctor.specialty}
-                </div>
-              </div>
+        {/* CAROUSEL */}
+        <div className="relative flex items-center justify-center">
 
-              <div className="p-6 relative">
-                <h3 className="text-xl font-bold bg-gradient-to-r from-medical-600 to-accent-500 bg-clip-text text-transparent mb-3">
-                  {doctor.name}
-                </h3>
+          {/* LEFT BUTTON */}
+          <button
+            onClick={movePrev}
+            className="absolute left-0 z-30 bg-white shadow-lg rounded-full p-3 hover:scale-110 transition"
+          >
+            <ChevronLeft />
+          </button>
 
-                <div className="flex items-center space-x-2 mb-3">
-                  <Award
-                    className="text-medical-600 group-hover:animate-bounce"
-                    size={16}
-                  />
-                  <span className="text-gray-700 text-sm font-medium">
-                    {doctor.qualification}
-                  </span>
-                </div>
+          {/* CARDS */}
+          <div className="flex items-center justify-center gap-10 w-full max-w-5xl">
+            {[prevIndex, current, nextIndex].map((index, pos) => {
+              const doctor = doctors[index];
+              const isCenter = pos === 1;
 
-                <div className="flex items-center space-x-2 mb-4">
-                  <Clock
-                    className="text-accent-600 group-hover:animate-bounce"
-                    size={16}
-                  />
-                  <span className="text-gray-700 text-sm font-medium">
-                    {doctor.experience}
-                  </span>
-                </div>
-
-                <button
-                  onClick={onBookAppointment}
-                  className="w-full bg-gradient-to-r from-medical-50 to-accent-50 text-medical-600 py-3 rounded-xl hover:bg-gradient-to-r hover:from-medical-600 hover:to-accent-500 hover:text-white transition-all duration-300 font-medium transform hover:scale-105 group/btn"
+              return (
+                <div
+                  key={doctor._id}
+                  className={`transition-all duration-500 ease-in-out
+                    ${
+                      isCenter
+                        ? "scale-110 z-20 opacity-100"
+                        : "scale-90 opacity-70"
+                    }`}
                 >
-                  <Sparkles
-                    className="inline mr-2 group-hover/btn:animate-spin"
-                    size={16}
-                  />
-                  Book Appointment
-                </button>
-              </div>
-            </div>
-          ))}
+                  <div className="w-80 bg-white rounded-2xl shadow-xl overflow-hidden">
+                    <img
+                      src={doctor.image}
+                      alt={doctor.name}
+                      className="w-full h-64 object-cover"
+                    />
+
+                    <div className="p-6 text-center">
+                      <h3 className="text-xl font-bold text-medical-600 mb-2">
+                        {doctor.name}
+                      </h3>
+
+                      <div className="flex justify-center gap-2 text-sm mb-2">
+                        <Award size={16} />
+                        {doctor.qualification}
+                      </div>
+
+                      <div className="flex justify-center gap-2 text-sm mb-4">
+                        <Clock size={16} />
+                        {doctor.experience}
+                      </div>
+
+                      <button
+                        onClick={onBookAppointment}
+                        className="w-full bg-gradient-to-r from-medical-600 to-accent-500 text-white py-3 rounded-xl hover:scale-105 transition"
+                      >
+                        <Sparkles className="inline mr-2" size={16} />
+                        Book Appointment
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* RIGHT BUTTON */}
+          <button
+            onClick={moveNext}
+            className="absolute right-0 z-30 bg-white shadow-lg rounded-full p-3 hover:scale-110 transition"
+          >
+            <ChevronRight />
+          </button>
         </div>
-        {/* See All Doctors Button */}
-        <div className="text-center mt-12 animate-fadeInUp animation-delay-800">
+
+        {/* SEE ALL DOCTORS */}
+        <div className="text-center mt-20">
           <a
             href="/all-doctors"
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-medical-600 to-accent-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-2xl hover:shadow-medical-500/50 transition-all duration-300 transform hover:scale-105"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-medical-600 to-accent-500 text-white px-10 py-4 rounded-full text-lg font-semibold hover:scale-105 transition"
           >
-            <span>See All Doctors</span>
-            <Award size={24} />
+            See All Doctors
+            <Award />
           </a>
         </div>
-
-        {/* Call to Action */}
-        <div className="text-center mt-16 animate-fadeInUp animation-delay-1000">
-          <div className="relative bg-gradient-to-r from-medical-50 via-accent-50 to-blue-50 rounded-3xl p-8 lg:p-12 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-accent-50 to-medical-50 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <Sparkles
-                  className="text-medical-500 animate-pulse"
-                  size={24}
-                />
-                <h3 className="text-4xl font-bold bg-gradient-to-r from-medical-600 to-accent-500 bg-clip-text text-transparent">
-                  Need to See a Specialist?
-                </h3>
-                <Sparkles className="text-accent-500 animate-pulse" size={24} />
-              </div>
-              <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
-                Our doctors are here to help you. Schedule a consultation today
-                and take the first step towards better health. ✨
-              </p>
-              <button
-                onClick={onBookAppointment}
-                className="bg-gradient-to-r from-medical-600 via-accent-500 to-medical-500 text-white px-10 py-4 rounded-full hover:shadow-2xl hover:shadow-medical-500/25 transition-all duration-500 font-medium transform hover:scale-110 group/btn overflow-hidden relative"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-medical-500 via-accent-500 to-medical-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></span>
-                <span className="relative flex items-center space-x-2">
-                  <Sparkles
-                    className="group-hover/btn:animate-spin"
-                    size={20}
-                  />
-                  <span>Schedule Consultation</span>
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        
       </div>
     </section>
   );

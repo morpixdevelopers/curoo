@@ -62,7 +62,17 @@ const Admin: React.FC = () => {
     experience: "",
     image: "",
   });
-
+  const handleDoctorImageUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewDoctor((prev) => ({
+        ...prev,
+        image: reader.result as string, // base64
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+  
   // State for services
   const [services, setServices] = useState<Service[]>([]);
   const [editingService, setEditingService] = useState<string | null>(null);
@@ -882,15 +892,34 @@ const Admin: React.FC = () => {
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-medical-500"
                 placeholder="Experience (e.g., 10+ years)"
               />
-              <input
-                type="url"
-                value={newDoctor.image}
-                onChange={(e) =>
-                  setNewDoctor({ ...newDoctor, image: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-medical-500"
-                placeholder="Image URL"
-              />
+              {/* Image Upload */}
+<div className="space-y-2">
+  {newDoctor.image && (
+    <img
+      src={newDoctor.image}
+      alt="Preview"
+      className="w-full h-40 object-cover rounded-lg border"
+    />
+  )}
+
+  <label className="flex items-center justify-center w-full p-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-medical-500 transition">
+    <Upload size={18} className="mr-2 text-gray-500" />
+    <span className="text-gray-600">Upload Doctor Image</span>
+
+    <input
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        if (e.target.files?.[0]) {
+          handleDoctorImageUpload(e.target.files[0]);
+        }
+      }}
+    />
+  </label>
+</div>
+
+
               <div className="flex items-center space-x-3 mt-6">
                 <button
                   onClick={handleAddDoctor}
